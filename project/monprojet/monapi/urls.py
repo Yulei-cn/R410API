@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import CommentaireListApiView, CommentaireDetailApiView
+from .views import ClientListApiView, ClientDetailApiView, ClientAuthenticateApiView
 
 urlpatterns = [
-    path('api/', CommentaireListApiView.as_view(), name='commentaire-list-create'),
-    path('api/<int:id>/', CommentaireDetailApiView.as_view(), name='commentaire-detail'),
+    path('clients/', ClientListApiView.as_view(), name='client-list-create'),
+    path('clients/<int:id>/', ClientDetailApiView.as_view(), name='client-detail'),
+    path('clients/authenticate/', ClientAuthenticateApiView.as_view(), name='client-authenticate'),
 ]

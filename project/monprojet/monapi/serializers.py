@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import Commentaire
+from .models import Client
 
-class CommentaireSerializer(serializers.ModelSerializer):
+class ClientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Commentaire
-        fields = ["titre", "commentaire", "date_publication"]
+        model = Client
+        fields = ['genre', 'nom', 'prenom', 'identifiant', 'adresse', 'mail', 'telephone']

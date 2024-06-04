@@ -1,58 +1,67 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Commentaire
-from .serializers import CommentaireSerializer
+from .models import Client
+from .serializers import ClientSerializer
 
-class CommentaireListApiView(APIView):
+class ClientListApiView(APIView):
     def get(self, request, *args, **kwargs):
-        commentaires = Commentaire.objects.all()
-        serializer = CommentaireSerializer(commentaires, many=True)
+        clients = Client.objects.all()
+        serializer = ClientSerializer(clients, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, *args, **kwargs):
-        data = {
-            'titre': request.data.get('titre'),
-            'commentaire': request.data.get('commentaire'),
-            'date_publication': request.data.get('date_publication'),
-        }
-        serializer = CommentaireSerializer(data=data)
+        data = request.data
+        if Client.objects.filter(identifiant=data.get('identifiant')).exists():
+            return Response({'error': 'Identifiant already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = ClientSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CommentaireDetailApiView(APIView):
+class ClientDetailApiView(APIView):
     def get(self, request, id, *args, **kwargs):
         try:
-            commentaire = Commentaire.objects.get(pk=id)
-        except Commentaire.DoesNotExist:
-            return Response({"res": "Object with id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            client = Client.objects.get(pk=id)
+        except Client.DoesNotExist:
+            return Response({"error": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = CommentaireSerializer(commentaire)
+        serializer = ClientSerializer(client)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def delete(self, request, id, *args, **kwargs):
         try:
-            commentaire = Commentaire.objects.get(pk=id)
-        except Commentaire.DoesNotExist:
-            return Response({"res": "Object with id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            client = Client.objects.get(pk=id)
+        except Client.DoesNotExist:
+            return Response({"error": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        commentaire.delete()
-        return Response({"res": "Object deleted!"}, status=status.HTTP_200_OK)
+        client.delete()
+        return Response({"message": "Client deleted"}, status=status.HTTP_200_OK)
     
     def put(self, request, id, *args, **kwargs):
         try:
-            commentaire = Commentaire.objects.get(pk=id)
-        except Commentaire.DoesNotExist:
-            return Response({"res": "Object with id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            client = Client.objects.get(pk=id)
+        except Client.DoesNotExist:
+            return Response({"error": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        data = {
-            'titre': request.data.get('titre'),
-            'commentaire': request.data.get('commentaire'),
-        }
-        serializer = CommentaireSerializer(instance=commentaire, data=data, partial=True)
+        serializer = ClientSerializer(instance=client, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ClientAuthenticateApiView(APIView):
+    def post(self, request, *args, **kwargs):
+        identifiant = request.data.get('identifiant')
+        mot_de_passe = request.data.get('mot_de_passe')
+        
+        try:
+            client = Client.objects.get(identifiant=identifiant)
+            if client.mot_de_passe == mot_de_passe:
+                return Response({"authenticated": True}, status=status.HTTP_200_OK)
+            else:
+                return Response({"authenticated": False}, status=status.HTTP_401_UNAUTHORIZED)
+        except Client.DoesNotExist:
+            return Response({"authenticated": False}, status=status.HTTP_401_UNAUTHORIZED)
